@@ -2,11 +2,11 @@ library(readxl)
 library(matlabr)
 library(xlsx)
 
-source("/media/csb/New Volume/susmita/Other/EMT_Scoring_RNA_seq/counts_to_TPM.R")
-source("/media/csb/New Volume/susmita/Other/EMT_Scoring_RNA_seq/EMT_score_func.R")
+source("./counts_to_TPM.R")
+source("./EMT_score_func.R")
 
 ## Folder with all the raw read counts
-setwd("/media/csb/New Volume/susmita/Other/EMT_Scoring_RNA_seq/Data")
+setwd("./Data")
 
 fileList = list.files(pattern = "*.tsv")
 
