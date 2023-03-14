@@ -68,7 +68,7 @@ cd ../MLR3_Code/
 
 %Pre-normalization and Post-normalization scatterplots
 
-cd './Plots/'
+cd '../Plots/'
 
 	gseID = split(string(dirInfo(1,1)),"_")
 	imageName = gseID(1) + "_scoreEMT1.png"
@@ -91,7 +91,7 @@ cd './Plots/'
 
 
 %% 5. Compiling and saving scores and correlations
-cd  ../../Data_generated/
+cd  ../Data_generated/
 
 	Results = table(ScoreEMT1, ScoreEMT1_norm);
 	writetable(Results,string(dirInfo(3,1)),'Delimiter','\t');
