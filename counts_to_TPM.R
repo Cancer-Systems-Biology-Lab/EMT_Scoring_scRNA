@@ -10,56 +10,59 @@
 
 
 
-countToTpm <- function(rawCount, GSEID) {    
+countToTpm <- function(rawCount, GSEID) {
+    geneLengthMap_hg = read.table(file="../Annotation/hg38_gene_length_kb.txt", sep = "\t",header = F,stringsAsFactors = F)
+    commonGenes_hg = intersect(rawCount[,1], geneLengthMap_hg[,2])
+    geneLengthMap_mm = read.table(file="../Annotation/mm10_gene_length_kb.txt", sep = "\t",header = F,stringsAsFactors = F)
+    commonGenes_mm = intersect(rawCount[,1], geneLengthMap_mm[,2])
+    geneCol = 2
 
-	geneLengthMap = read.table(file="../Annotation/mm10_gene_length_kb.txt", sep = "\t",header = TRUE,stringsAsFactors = F)
-	geneCol = 2
-	commonGenes = intersect(rawCount[,1], geneLengthMap[,1])
-	
-	if(length(commonGenes) == 0) {
-		geneLengthMap = read.delim("../Annotation/hg38_gene_length_kb.txt")
-		commonGenes = intersect(rawCount[,1], geneLengthMap[,1])
-		geneCol = 2
-	}
+    if(length(commonGenes_hg) > length(commonGenes_mm)) {
+        geneLengthMap = geneLengthMap_hg
+        commonGenes = commonGenes_hg
+    }
+    else{
+        geneLengthMap = geneLengthMap_mm
+        commonGenes = commonGenes_mm
+    }
+        # Get the common gene indices for count matrix
+    idx1 = match(commonGenes,rawCount[,1])
+    # Subset count matrix for common genes
+    rawCount = rawCount[idx1,-c(1)]
+    # Get the common gene indices for gene length annotation
+    idx2 = match(commonGenes,geneLengthMap[,2])
+    # Subset gene length annotation for common genes
+    geneLengthSubset = geneLengthMap[idx2, ]
+    geneSymbol = geneLengthSubset[ ,geneCol]
+    featureLength = geneLengthSubset[ ,3]
 
+    rownames(rawCount) = geneSymbol
+    Samples = colnames(rawCount) 
+    # Ensure valid arguments.
+    stopifnot(length(featureLength) == nrow(rawCount))
 
-	idx1 = match(commonGenes,rawCount[,1])
-	rawCountSubset = apply(rawCount[idx1,-c(1,2)], 2, as.numeric)
-	idx2 = match(commonGenes,geneLengthMap[,1])
-	geneLengthSubset = geneLengthMap[idx2, ]
-	geneSymbol = geneLengthSubset[ ,geneCol]
-	featureLength = geneLengthSubset[ ,3]
+    # Compute effective lengths of features in each library.
+    effLen <- featureLength
 
-	rownames(rawCountSubset) = geneSymbol
+    # Process one column at a time.
+    tpm <- do.call(cbind, lapply(1:ncol(rawCount), function(i) {
+        rate = (rawCount[,i])/effLen
+        rate/sum(rate, na.rm = T) * 1e6
+    }))
 
-	    # Ensure valid arguments.
-  stopifnot(length(featureLength) == nrow(rawCountSubset))
-  
-  # Compute effective lengths of features in each library.
-  effLen <- featureLength
-  
-  # Process one column at a time.
-  tpm <- do.call(cbind, lapply(1:ncol(rawCountSubset), function(i) {
-    rate = (rawCountSubset[,i])/effLen
-    rate/sum(rate) * 1e6
-  }))
-  
-  log2TPM = log2(tpm+1)
-  # Copy the row and column names from the original matrix.
-  colnames(log2TPM) <- colnames(rawCountSubset)
-  rownames(log2TPM) <- toupper(rownames(rawCountSubset))
+    tpm = log2(tpm+1)
+    # Copy the row and column names from the original matrix.
+    colnames(tpm) <- Samples 
+    rownames(tpm) <- toupper(geneSymbol)
 
-	  outFile = paste("../Data_generated/", paste(GSEID, "_TPM.tsv"), sep = "")
-	  if(!file.exists(outFile)) file.create(outFile)
-	  write.table(log2TPM,file = outFile)
+    outFile = paste("../Data_generated/", GSEID, "_TPM.tsv", sep = "")
+    write.table(tpm, outFile, sep = '\t', quote = F)
 
-  return(log2TPM)
-  
+    return(tpm)
+
 }
 
 rnaToMA = function(TPMVal){
-	MA = (0.57 +(TPMVal* 0.37 ))
-	return(MA)
+    MA = (0.57 +(TPMVal* 0.37 ))
+    return(MA)
 }
-
-
