@@ -4,15 +4,26 @@ This code takes raw read counts from the user and calculated TPM expression data
 
 ### Preprocessing of the raw data
 
-After QC filtering, align using STAR-aligner using appropriate reference genome (hg38/mm10) and then calculate raw read counts using htseq-count.
+After QC filtering, align using STAR-aligner using appropriate reference genome (hg38/mm10) and then calculate raw read counts using htseq-count. 
+Alternatively, you can download the raw counts from GEO.
+
+### Requirements
+- R:
+		- dplyr
+		- data.table
+		- readxl
+		- matlabr
+- MATLAB (If you do not have MATLAB and MLRScore is not required, checkout the NoMLR branch which does not have this dependency)
 
 ### Running the code
-####  ***Make Data, Data_generated, Plot files and Output folders***
 
-Using the above said raw counts, source the all_GSE_EMT.R code
+Please run the following in a terminal :
+
+```
+Rscript  ./all_GSE_EMT.R
+```
 
 This code will calculate the TPM expression data, EMT scores of three metrics: 76GS, KS and MLR. Also the correlations between these three metrics.
-
 
 ***If you have any problem running this code, please let me know***
 
