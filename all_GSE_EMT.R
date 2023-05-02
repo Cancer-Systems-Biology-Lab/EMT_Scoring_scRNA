@@ -22,7 +22,6 @@ for(dataNum in 1:length(fileList)){
     counts = rnaToMA(counts)
     EMT76GS_Score = EMT76GS(counts)
     KS_score=KSScore(counts)
-    MLR_score = mlrEMTPred(counts,fileList[dataNum])
     writeEMTscore(fileList[dataNum], EMT76GS_Score, KS_score)
     corMat[dataNum, ] = c(fileList[dataNum],all_scoreCor(list(EMT76GS_Score[,1], KS_score[,1])))
 
