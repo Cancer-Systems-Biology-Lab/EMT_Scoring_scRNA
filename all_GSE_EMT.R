@@ -12,8 +12,8 @@ setwd("./Data")
 fileList = list.files(pattern = "*_counts.rds")
 fileList = sapply(strsplit(fileList, split = "_"), function(x) x[1])
 
-corMat = matrix(0, nrow = length(fileList), ncol = 7)
-colnames(corMat) = c("Sample","76GS-MLR_Cor","76GS-MLR_Pval","76GS-KS_Cor","76GS-KS_Pval","KS-MLR_Cor","KS-MLR_Pval")
+corMat = matrix(0, nrow = length(fileList), ncol = 3)
+colnames(corMat) = c("Sample","76GS-KS_Cor","76GS-KS_Pval")
 
 for(dataNum in 1:length(fileList)){
     countToTpm_sc(fileList[dataNum])
@@ -23,8 +23,8 @@ for(dataNum in 1:length(fileList)){
     EMT76GS_Score = EMT76GS(counts)
     KS_score=KSScore(counts)
     MLR_score = mlrEMTPred(counts,fileList[dataNum])
-    writeEMTscore(fileList[dataNum], EMT76GS_Score, KS_score, MLR_score)
-    corMat[dataNum, ] = c(fileList[dataNum],all_scoreCor(list(EMT76GS_Score[,1], MLR_score[,2], KS_score[,1])))
+    writeEMTscore(fileList[dataNum], EMT76GS_Score, KS_score)
+    corMat[dataNum, ] = c(fileList[dataNum],all_scoreCor(list(EMT76GS_Score[,1], KS_score[,1])))
 
 }
 

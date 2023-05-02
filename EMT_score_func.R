@@ -108,78 +108,17 @@ KSScore = function(expMat){
   return(ksOut)
 }
 
-
-emtPredExp = function(geneExpMat,gseID){
-
-  #Predictor + Normalizer gene expression to run MLR model for EMT prediction 
-  geneList =  scan(file = "../Gene_signatures/MLR/genes_for_EMT_score.txt",sep = '\n',what = "vector")
-  idx = match(geneList,rownames(geneExpMat))
-  geneExpSubMat = geneExpMat[na.omit(idx), ]
-
-  notFound = setdiff(geneList,rownames(geneExpMat))
-  print(paste("Gene not found in the dataset", paste(notFound, collapse = ",")))
-  sampleNum = ncol(geneExpSubMat)
-  
-  fileName = trimws(paste(gseID,"EMT_gene_explevels.txt",sep="_"))
-  outFileName = paste("../Data_generated",fileName,sep = "/")
-  write.table(geneExpSubMat,file = outFileName ,sep = '\t',quote = F,row.names = T)
-  return(list(geneExpSubMat,fileName))
-}
-
-getNCIindices = function(EMTexp,seriesID){
-  nci60_data = read.table(file = "../Gene_signatures/MLR/GPL570-55999.txt",sep = '\t',header = T,stringsAsFactors = F, fill = T, quote = "")
-  nci60_indices = na.omit(match(rownames(EMTexp),nci60_data[,11]))
-  nci60_out = paste(seriesID,"_nci60_use_probe.txt",sep = "")
-  nci60_indices_file = paste("../Data_generated",nci60_out,sep = "/")
-  write(nci60_indices,file = nci60_indices_file ,sep = '\n')
-  return(list(nci60_indices,nci60_out))
-}
-
-
-mlrEMTPred = function(expSet,gse_id){
-
-  cat("EMT predictors expression file generated\n")
-  emtPredExpOut = emtPredExp(expSet,gse_id)
-  emtExpMat = emtPredExpOut[[1]]
-  emtWrite = emtPredExpOut[[2]]
-  cellnames = colnames(emtExpMat)
-
-  NCIindicesOut = getNCIindices(emtExpMat,gse_id)
-  nci60Indices = NCIindicesOut[[1]]
-  nci60Write = NCIindicesOut[[2]]
-  
-  mlrOutfile  = paste(gse_id,"_emt_score_MLR.txt",sep  = "")
-  writeOut = mlrOutfile
-  write(rbind(emtWrite,nci60Write,writeOut),file = "../MLR3_Code/matlab_input_temp.txt", sep = '\n')
-
-  cat("running MLR EMT predictions (matlab code)...\n")
-  run_matlab_script("../MLR3_Code/MLR3_automated.m")  
-
-  mlrOut = read.table(file  = paste("../Data_generated/",writeOut, sep = ""),header = T,stringsAsFactors = F)
-  file.remove("../MLR3_Code/matlab_input_temp.txt")
-  rownames(mlrOut) = cellnames
-  print(colnames(mlrOut))
-  return(mlrOut)
-}
-
 all_scoreCor = function(scoreList){
-  
-  count = 0
-  corVal = NULL
-  for(i in 1:2){
-    for(j in (i+1):3){
-      count = count + 1
-      corEst = cor.test(as.numeric(scoreList[[i]]),as.numeric(scoreList[[j]]))
-      corVal = c(corVal,c(corEst$estimate,corEst$p.value))
-    }
-  }
-
-  return(corVal)
+    count = 0
+    corVal = NULL
+    corEst = cor.test(as.numeric(scoreList[[1]]),as.numeric(scoreList[[2]]))
+    corVal = c(corVal,c(corEst$estimate,corEst$p.value))
+    return(corVal)
 }
 
-writeEMTscore<-function(gseID,GS76,KS,MLR){
-    EMTDF=cbind(rownames(GS76),GS76,KS,MLR$ScoreEMT1_norm)
+writeEMTscore<-function(gseID,GS76,KS){
+    EMTDF=cbind(rownames(GS76),GS76,KS)
     EMTDF = as.data.frame(EMTDF)
-    colnames(EMTDF) = c("Cellname","GS76_Score","KS_Score","MLR_Score")
+    colnames(EMTDF) = c("Cellname","GS76_Score","KS_Score")
     fwrite(EMTDF,paste("../Output/",gseID,"_EMTScores.tsv",sep=''),sep='\t')
     }
